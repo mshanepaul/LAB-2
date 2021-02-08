@@ -21,13 +21,13 @@ MaxId = 0
 
 @app.route("/")
 def home():
-    return "ECSE3038 - Lab 2"
+    return "Lab-2"
 
 # Returns all data in the database
 @app.route("/profile", methods=["GET", "POST", "PATCH"])
 def get_profile():
     if request.method == "GET":
-        return jsonify(PROFILE_DB)
+        return jsonify(Profile_db)
 
     elif request.method == "POST":
         
@@ -67,12 +67,12 @@ def tank_data():
         return jsonify(Tank_d)  
 
     elif request.method == "POST":
-        global max_id
+        global MaxId
 
         MaxId += 1
 
         r = request.json
-        r["id"] = max_id
+        r["id"] = MaxId
         Tank_d.append(r)
         return jsonify(Tank_d)
    
