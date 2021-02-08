@@ -1,107 +1,105 @@
 from flask import Flask, request, jsonify
-import datetime
+from flask_cors import CORS
+from datetime import datetime
 
 app = Flask(__name__)
-dte = datetime.datetime.now()
+CORS(app)
 
-# fake DBs:
-dummyNum = 0
-
-profileDB = {
-    "sucess": True,
-    "data": {
-        "last_updated": "2/3/2021, 8:48:51 PM",
-        "username": "coolname",
-        "role": "Engineer",
-        "color": "#3478ff"
+# database
+Profile_db = {
+        "success": True,
+        "data": {
+            "last_updated": "2/3/2021, 8:48:51 PM",
+            "username": "user_",
+            "role": "Engineer",
+            "color": "red"
+        }
     }
-}
 
-tankDB = []
+Tank_d = []
+MaxId = 0
 
-# Index
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
-    return "hello lab 2"
+    return "ECSE3038 - Lab 2"
 
-# PROFILE Routes:
+# Returns all data in the database
 @app.route("/profile", methods=["GET", "POST", "PATCH"])
-def profile():
-    if request.method == "POST":
-        # /POST
-        profileDB["data"]["last_updated"] = (dte.strftime("%c"))
-        profileDB["data"]["username"] = (request.json["username"])
-        profileDB["data"]["role"] = (request.json["role"])
-        profileDB["data"]["color"] = (request.json["color"])
-       
-        return jsonify(profileDB)
-   
+def get_profile():
+    if request.method == "GET":
+        return jsonify(PROFILE_DB)
+
+    elif request.method == "POST":
+        
+        # Get the current date and time
+        now = datetime.now()
+        dt = now.strftime("%d/%m/%Y %H:%M:%S")
+
+        Profile_db["data"]["last_updated"] = (dt)
+        Profile_db["data"]["username"] = (request.json["username"])
+        Profile_db["data"]["role"] = (request.json["role"])
+        Profile_db["data"]["color"] = (request.json["color"])
+
+        return jsonify(Profile_db)
+
     elif request.method == "PATCH":
-        # /PATCH
-        profileDB["data"]["last_updated"] = (dte.strftime("%c"))
         
-        tempDict = request.json
-        attributes = tempDict.keys()
-        
+        # Get the current date and time
+        now = datetime.now()
+        dt = now.strftime("%d/%m/%Y %H:%M:%S")
+    
+        data = Profile_db["data"]
+
+        r = request.json
+        r["last_updated"] = dt
+        attributes = r.keys()
         for attribute in attributes:
-            profileDB["data"][attribute] = tempDict[attribute]
-  
-        return jsonify(profileDB)
+            data[attribute] = r[attribute]
 
-    else:
-        # /GET
-        return jsonify(profileDB)
+        return jsonify(Profile_db)    
 
-# DATA Routes:
+
+
+# Returns all data in Tank_d
 @app.route("/data", methods=["GET", "POST"])
-def data():
-    if request.method == "POST":
-        # /POST
-        global dummyNum
-        dummyNum += 1   
-        
-        posts = {}
-       
-        posts["id"] = dummyNum
-        posts["location"] = (request.json["location"])
-        posts["lat"] = (request.json["lat"])
-        posts["long"] = (request.json["long"])
-        posts["percentage_full"] = (request.json["percentage_full"])
+def tank_data():
+    if request.method == "GET":
+        return jsonify(Tank_d)  
 
-        tankDB.append(posts)
+    elif request.method == "POST":
+        global max_id
 
-        return jsonify(tankDB)
+        MaxId += 1
 
-    else:
-        # /GET
-        return jsonify(tankDB)
+        r = request.json
+        r["id"] = max_id
+        Tank_d.append(r)
+        return jsonify(Tank_d)
+   
+ 
+@app.route('/data/<int:id>', methods=["PATCH", "DELETE"])
+def tank_id_methods(id):
+    if request.method == "PATCH":
+        for i in Tank_d:
+            if i["id"] == id:
+                r = request.json
+                attributes = r.keys()
 
-@app.route("/data/<int:tankID>", methods=["PATCH", "DELETE"])
-def update(tankID):
-     if request.method == "PATCH":
-        # /PATCH
-        for index in tankDB:
-            if index["id"] == tankID:
-                    tempDict = request.json
-                    attributes = tempDict.keys()
-        
-                    for attribute in attributes:
-                        index[attribute] = tempDict[attribute]
-        
-        return jsonify(tankDB) 
+                for attribute in attributes:
+                    i[attribute] = r[attribute]
 
-     elif request.method == "DELETE":
-        # /DELETE
-        for index in tankDB:
-            if index["id"] == tankID:
-                tankDB.remove(index)
+        return jsonify(Tank_d)
+    
+    elif request.method == "DELETE":
+        for i in Tank_d:
+            if i["id"] == id:
+                Tank_d.remove(i)
 
-        return jsonify(tankDB)
+        return jsonify(Tank_d)
 
-     else:
-         # /GET
-        return jsonify(tankDB)
-
-# Main
-if __name__ == '__main__':
-   app.run(debug = True)
+    
+if __name__ == "__main__":
+    app.run(
+       debug=True,
+       port = 3000
+    )
